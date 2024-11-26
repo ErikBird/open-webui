@@ -7,7 +7,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	import { config, user, models as _models, temporaryChatEnabled } from '$lib/stores';
+	import { config, user, models as _models, temporaryChatEnabled, additionalFilter } from '$lib/stores';
 	import { sanitizeResponseContent, findWordIndices } from '$lib/utils';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
@@ -24,6 +24,10 @@
 	export let stopResponse: Function;
 
 	export let autoScroll = false;
+
+	// for filters
+	export let selectedFilter = '';
+	export let additionalFilterValues = ['work', 'personal', 'other'];
 
 	export let atSelectedModel: Model | undefined;
 	export let selectedModels: [''];
@@ -181,6 +185,21 @@
 					{/if}
 				</div>
 			</div>
+			{#if $additionalFilter}
+				<div class="flex items-center gap-2 mt-2">
+					<div class="text-sm font-medium text-gray-500 dark:text-gray-400">
+						Filter:
+					</div>
+					<select
+						class="rounded-md p-2 bg-gray-50 dark:bg-gray-850 dark:text-gray-100 text-sm"
+						bind:value={selectedFilter}
+					>
+						{#each additionalFilterValues as filter}
+							<option value={filter}>{filter}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
 
 			<div
 				class="text-base font-normal xl:translate-x-6 md:max-w-3xl w-full py-3 {atSelectedModel
@@ -204,7 +223,13 @@
 						dispatch('upload', e.detail);
 					}}
 					on:submit={(e) => {
-						dispatch('submit', e.detail);
+						if (typeof e.detail === 'string' && selectedFilter !== '') {
+							const newDetail = `${e.detail} #${selectedFilter}`;
+							dispatch('submit', newDetail);
+						} else {
+							console.error(typeof e.detail);
+							dispatch('submit', e.detail);
+						}
 					}}
 				/>
 			</div>
